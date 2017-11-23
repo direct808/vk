@@ -7,9 +7,13 @@ use Direct808\Vk\Exception\CurlException;
 use Direct808\Vk\Exception\ParametersMissingVkExeption;
 use Direct808\Vk\Exception\UserAuthVkException;
 use Direct808\Vk\Exception\VkException;
+use Direct808\Vk\Features\Market;
+use Direct808\Vk\Features\Photos;
 
 class Vk
 {
+    use Market, Photos;
+
     private $token;
 
     public function setToken($token)
@@ -19,10 +23,22 @@ class Vk
     }
 
 
-    private function request($method, array $parameters = [])
+    private function callMethod($method, array $parameters = [])
     {
         $url = "https://api.vk.com/method/$method";
+
+//        if (!isset($parameters['access_token']))
         $parameters['access_token'] = $this->token;
+
+        $result = $this->query($url, $parameters);
+
+
+//        print_r($result);
+        return $result;
+    }
+
+    private function query($url, array $parameters = [])
+    {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -32,7 +48,9 @@ class Vk
         $result = curl_exec($ch);
 
         if ($result === false) {
-            throw new CurlException(curl_error($ch), curl_errno($ch));
+            $err = curl_error($ch);
+            $errNo = curl_errno($ch);
+            throw new CurlException($err, $errNo);
         }
 
         $result = json_decode($result, true);
@@ -41,13 +59,16 @@ class Vk
             $this->handleError($result['error']);
         }
 
-        print_r($result);
+//        print_r($result);
         return $result;
     }
 
     private function handleError($error)
     {
-        $message = isset($error['error_msg']) ? $error['error_msg'] : 'Unknown error';
+        if (is_string($error))
+            throw new VkException($error);
+
+        $message = isset($error['error_msg']) ? $error['error_msg'] : 'Unknown Vk error';
         $code = isset($error['error_code']) ? $error['error_code'] : 0;
 
         switch ($code) {
@@ -62,10 +83,4 @@ class Vk
         throw new VkException($message, $code);
     }
 
-    public function marketAdd(array $parameters)
-    {
-        $response = $this->request('market.add', $parameters);
-
-        return $response['response']['market_item_id'];
-    }
 }
