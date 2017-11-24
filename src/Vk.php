@@ -2,39 +2,38 @@
 
 namespace Direct808\Vk;
 
-
-use Direct808\Vk\Exception\CurlException;
-use Direct808\Vk\Exception\ParametersMissingVkExeption;
-use Direct808\Vk\Exception\UserAuthVkException;
-use Direct808\Vk\Exception\VkException;
-use Direct808\Vk\Features\Market;
-use Direct808\Vk\Features\Photos;
-
 class Vk
 {
-    use Market, Photos;
+    use
+        Features\Market,
+        Features\Photos;
 
     private $token;
+    private $batchMode;
+    private $batches = [];
 
-    public function setToken($token)
+    public function setAccessToken($token)
     {
         $this->token = $token;
         return $this;
     }
 
 
-    private function callMethod($method, array $parameters = [])
+    public function callMethod($method, array $parameters = [])
     {
+        if ($this->batchMode)
+            return $this->callMethodBatch($method, $parameters);
+
         $url = "https://api.vk.com/method/$method";
-
-//        if (!isset($parameters['access_token']))
         $parameters['access_token'] = $this->token;
-
         $result = $this->query($url, $parameters);
-
-
-//        print_r($result);
         return $result;
+    }
+
+    private function callMethodBatch($method, array $parameters = [])
+    {
+        $json = json_encode($parameters);
+        $this->batches[] = "API.$method($json);";
     }
 
     private function query($url, array $parameters = [])
@@ -48,9 +47,7 @@ class Vk
         $result = curl_exec($ch);
 
         if ($result === false) {
-            $err = curl_error($ch);
-            $errNo = curl_errno($ch);
-            throw new CurlException($err, $errNo);
+            throw new Exception\CurlException(curl_error($ch), curl_errno($ch));
         }
 
         $result = json_decode($result, true);
@@ -59,28 +56,51 @@ class Vk
             $this->handleError($result['error']);
         }
 
-//        print_r($result);
         return $result;
     }
 
     private function handleError($error)
     {
         if (is_string($error))
-            throw new VkException($error);
+            throw new Exception\VkException($error);
 
         $message = isset($error['error_msg']) ? $error['error_msg'] : 'Unknown Vk error';
         $code = isset($error['error_code']) ? $error['error_code'] : 0;
 
         switch ($code) {
             case 5:
-                throw new UserAuthVkException($message, $code);
+                throw new Exception\UserAuthVkException($message, $code);
+            case 3:
+                throw new Exception\UnknownMethodVkException($message, $code);
+            case 12:
+                throw new Exception\UnableCompileCodeVkException($message, $code);
+            case 13:
+                throw new Exception\RuntimeErrorVkException($message, $code);
+            case 15:
+                throw new Exception\AccessDeniedVkException($message, $code);
             case 100:
-                throw new ParametersMissingVkExeption($message, $code);
-
+                throw new Exception\ParametersMissingVkException($message, $code);
         }
+        throw new Exception\VkException($message, $code);
+    }
 
+    public function execute($code)
+    {
+        return $this->callMethod('execute', ['code' => $code]);
+    }
 
-        throw new VkException($message, $code);
+    public function batch(\Closure $closure)
+    {
+        $this->batchMode = true;
+        $closure();
+//        print_r($this->batches);
+        $this->batchMode = false;
+
+        $this->batches[] = 'return "111";';
+
+        $str = implode("\n", $this->batches);
+
+        return $this->execute($str);
     }
 
 }

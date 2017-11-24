@@ -1,6 +1,10 @@
 <?php
 
+namespace Test;
 
+
+use Direct808\Vk\Exception\ParametersMissingVkException;
+use Direct808\Vk\Exception\VkException;
 use Direct808\Vk\Vk;
 use PHPUnit\Framework\TestCase;
 
@@ -13,11 +17,8 @@ class VkTest extends TestCase
 
     protected function setUp()
     {
-        $dotEnv = new Dotenv\Dotenv(__DIR__ . '/..');
-        $dotEnv->load();
-
         $this->vk = new Vk();
-        $this->vk->setToken(getenv('ACCESS_TOKEN'));
+        $this->vk->setAccessToken(getenv('ACCESS_TOKEN'));
     }
 
     function testGetMarketUploadServer()
@@ -30,6 +31,13 @@ class VkTest extends TestCase
         return $url;
     }
 
+    function testGetMarketUploadServerExceptions()
+    {
+        $this->expectException(ParametersMissingVkException::class);
+        $this->vk->photosGetMarketUploadServer([]);
+    }
+
+
     /**
      * @depends testGetMarketUploadServer
      * @param string $url
@@ -37,13 +45,19 @@ class VkTest extends TestCase
      */
     function testMarketUploadPhotoToServer($url)
     {
-        $result = $this->vk->uploadPhotoToServer($url, 'http://lorempixel.com/410/410/');
+        $photoData = $this->vk->uploadPhotoToServer($url, 'https://fakeimg.pl/400x400/');
+        $this->assertJson($photoData['photo']);
+        return $photoData;
+    }
 
-//        print_r($result);
-
-        $this->assertTrue(true);
-
-        return $result;
+    /**
+     * @depends testGetMarketUploadServer
+     * @param string $url
+     */
+    function testMarketUploadPhotoToServerExceptions($url)
+    {
+        $this->expectException(VkException::class);
+        $this->vk->uploadPhotoToServer($url, 'http://ru-free-tor.org/download/592095');
     }
 
     /**
@@ -54,31 +68,33 @@ class VkTest extends TestCase
     {
         $result = $this->vk->photosSaveMarketPhoto($photoData, getenv('GROUP_ID'));
 
-        $photoData['photo'] = stripslashes($photoData['photo']);
+        $this->assertTrue($result['response'][0]['pid'] > 0);
 
-//        print_r($result);
-
-        $this->assertTrue(true);
-
-        return $result['response'][0]['id'];
+        return $result['response'][0]['pid'];
     }
 
-    /**
-     * @param $photoId
-     * @depends testMarketSavePhoto
-     */
-    function testMarketAdd($photoId)
+    function testMarketAddException()
     {
-        $id = $this->vk->marketAdd([
-            'owner_id' => 234234234,
-            'name' => 234234234,
-            'description' => 233242342344234234,
-            'category_id' => 500,
-            'price' => 500000,
-            'main_photo_id' => $photoId,
-        ]);
-
-
-        $this->assertTrue($id > 0);
+        $this->expectException(ParametersMissingVkException::class);
+        $this->vk->marketAdd([]);
     }
+
+
+//    /**
+//     * @param $photoId
+//     * @depends testMarketSavePhoto
+//     */
+//    function testMarketAdd($photoId)
+//    {
+//        $id = $this->vk->marketAdd([
+//            'owner_id' => -getenv('GROUP_ID'),
+//            'name' => 234234234,
+//            'description' => 233242342344234234,
+//            'category_id' => 500,
+//            'price' => 500000,
+//            'main_photo_id' => $photoId,
+//        ]);
+//
+//        $this->assertTrue($id > 0);
+//    }
 }
