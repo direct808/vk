@@ -38,20 +38,20 @@ class CommonTest extends TestCase
 //        $this->vk->execute('asdasd');
     }
 
-    /** @test */
-    function sdfsdfasd()
-    {
-        $groupId = getenv('GROUP_ID');
-        $result = $this->vk->marketGetById([
-            'item_ids' => "-{$groupId}_1169004234,-153285493_11689744234"
-        ]);
-
-        print_r($result);
-
-        $this->assertTrue(true);
+//    /** @test */
+//    function sdfsdfasd()
+//    {
+//        $groupId = getenv('GROUP_ID');
+//        $result = $this->vk->marketGetById([
+//            'item_ids' => "-{$groupId}_1169004234,-153285493_11689744234"
+//        ]);
+//
+//        print_r($result);
+//
+//        $this->assertTrue(true);
 //        $this->expectException(UserAuthVkException::class);
 //        $this->vk->setAccessToken('bad_token');
 //        $this->vk->execute('asdasd');
-    }
+//    }
 
 }

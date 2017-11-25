@@ -12,6 +12,13 @@ trait Market
         return $response['response']['market_item_id'];
     }
 
+    public function marketEdit(array $parameters)
+    {
+        $response = $this->callMethod('market.edit', $parameters);
+
+        return $response['response'] == 1;
+    }
+
     public function marketGet(array $parameters)
     {
         $response = $this->callMethod('market.get', $parameters);
@@ -36,6 +43,25 @@ trait Market
         $response = $this->callMethod('market.getById', $parameters);
 
         return $response;
+    }
+
+    public function marketUploadPhotos($filePath, $groupId, $firstIsMain = false)
+    {
+        $files = is_array($filePath) ? $filePath : [$filePath];
+
+        $result = [];
+        for ($i = 0; $i < count($files); $i++) {
+            $uploadUrl = $this->photosGetMarketUploadServer([
+                'group_id' => $groupId,
+                'main_photo' => $firstIsMain && $i == 0 ? 1 : 0,
+            ]);
+            $uploadData = $this->photosUploadToServer($uploadUrl, $files[$i]);
+            $result[] = $this->photosSaveMarketPhoto($uploadData, $groupId)['response'][0]['id'];
+        }
+        if (!is_array($filePath)) {
+            return reset($result);
+        }
+        return $result;
     }
 
 }

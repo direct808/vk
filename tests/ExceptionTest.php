@@ -28,6 +28,8 @@ class ExceptionTest extends TestCase
     function bad_access_token()
     {
         $this->expectException(UserAuthVkException::class);
+        $this->expectExceptionCode(5);
+
         $this->vk->setAccessToken('bad_token');
         $this->vk->callMethod('account.getInfo');
     }
@@ -36,6 +38,8 @@ class ExceptionTest extends TestCase
     function access_denied()
     {
         $this->expectException(AccessDeniedVkException::class);
+        $this->expectExceptionCode(15);
+
         $this->vk->callMethod('market.delete', [
             'owner_id' => -31456119,
             'item_id' => 123123,
@@ -46,6 +50,8 @@ class ExceptionTest extends TestCase
     function parameters_missing()
     {
         $this->expectException(ParametersMissingVkException::class);
+        $this->expectExceptionCode(100);
+
         $this->vk->callMethod('market.delete', []);
     }
 
@@ -53,6 +59,8 @@ class ExceptionTest extends TestCase
     function unknown_method()
     {
         $this->expectException(UnknownMethodVkException::class);
+        $this->expectExceptionCode(3);
+
         $this->vk->callMethod('bad_method', []);
     }
 
@@ -61,6 +69,8 @@ class ExceptionTest extends TestCase
     function unable_to_compile_code()
     {
         $this->expectException(UnableCompileCodeVkException::class);
+        $this->expectExceptionCode(12);
+
         $this->vk->execute('bad code (((');
     }
 
@@ -69,17 +79,9 @@ class ExceptionTest extends TestCase
     function runtime_error()
     {
         $this->expectException(RuntimeErrorVkException::class);
+        $this->expectExceptionCode(13);
+
         $this->vk->execute('var a=1/0;');
     }
-
-
-    /** @test */
-
-    function asdasd()
-    {
-//        $this->expectException(RuntimeErrorVkException::class);
-        $this->vk->marketDelete(-getenv('GROUP_ID'), 345);
-    }
-
 
 }

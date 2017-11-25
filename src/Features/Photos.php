@@ -13,7 +13,7 @@ trait Photos
         return $result['response']['upload_url'];
     }
 
-    public function uploadPhotoToServer($uploadUrl, $file)
+    public function photosUploadToServer($uploadUrl, $file)
     {
         $filePath = tempnam(sys_get_temp_dir(), 'vk');
 
@@ -27,7 +27,7 @@ trait Photos
         file_put_contents($filePath, $f);
 
         $curlFile = new \CURLFile($filePath);
-        $curlFile->setPostFilename('file.png');
+        $curlFile->setPostFilename('file.jpg');
 
         $parameters = [
             'file' => $curlFile

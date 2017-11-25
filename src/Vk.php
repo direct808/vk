@@ -9,6 +9,7 @@ class Vk
         Features\Photos;
 
     private $token;
+    private $apiVersion = "5.69";
     private $batchMode;
     private $batches = [];
 
@@ -26,6 +27,7 @@ class Vk
 
         $url = "https://api.vk.com/method/$method";
         $parameters['access_token'] = $this->token;
+        $parameters['v'] = $this->apiVersion;
         $result = $this->query($url, $parameters);
         return $result;
     }
@@ -68,18 +70,21 @@ class Vk
         $code = isset($error['error_code']) ? $error['error_code'] : 0;
 
         switch ($code) {
-            case 5:
-                throw new Exception\UserAuthVkException($message, $code);
             case 3:
-                throw new Exception\UnknownMethodVkException($message, $code);
+                throw new Exception\UnknownMethodVkException($message);
+            case 5:
+                throw new Exception\UserAuthVkException($message);
             case 12:
-                throw new Exception\UnableCompileCodeVkException($message, $code);
+                throw new Exception\UnableCompileCodeVkException($message);
             case 13:
-                throw new Exception\RuntimeErrorVkException($message, $code);
+                throw new Exception\RuntimeErrorVkException($message);
             case 15:
-                throw new Exception\AccessDeniedVkException($message, $code);
+                throw new Exception\AccessDeniedVkException($message);
             case 100:
-                throw new Exception\ParametersMissingVkException($message, $code);
+                throw new Exception\ParametersMissingVkException($message);
+            case 1403:
+                throw new Exception\ItemNotFoundException($message);
+
         }
         throw new Exception\VkException($message, $code);
     }
