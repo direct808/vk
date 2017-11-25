@@ -6,6 +6,7 @@ class Vk
 {
     use
         Features\Market,
+        Features\Notes,
         Features\Photos;
 
     private $token;
@@ -35,7 +36,7 @@ class Vk
     private function callMethodBatch($method, array $parameters = [])
     {
         $json = json_encode($parameters);
-        $this->batches[] = "API.$method($json);";
+        $this->batches[] = "result.push(API.$method($json));";
     }
 
     private function query($url, array $parameters = [])
@@ -78,6 +79,8 @@ class Vk
                 throw new Exception\UnableCompileCodeVkException($message);
             case 13:
                 throw new Exception\RuntimeErrorVkException($message);
+            case 14:
+                throw new Exception\CaptchaNeededVkException($error);
             case 15:
                 throw new Exception\AccessDeniedVkException($message);
             case 100:
@@ -97,11 +100,15 @@ class Vk
     public function batch(\Closure $closure)
     {
         $this->batchMode = true;
+        $this->batches = [];
+
+        $this->batches[] = 'var result = [];';
+
         $closure();
-//        print_r($this->batches);
+
         $this->batchMode = false;
 
-        $this->batches[] = 'return "111";';
+        $this->batches[] = 'return result;';
 
         $str = implode("\n", $this->batches);
 

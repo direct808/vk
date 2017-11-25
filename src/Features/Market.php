@@ -35,7 +35,7 @@ trait Market
         ];
         $response = $this->callMethod('market.delete', $parameters);
 
-        return $response;
+        return $response['response'] == 1;
     }
 
     public function marketGetById(array $parameters)
@@ -47,6 +47,8 @@ trait Market
 
     public function marketUploadPhotos($filePath, $groupId, $firstIsMain = false)
     {
+        $oldBatchMode = $this->batchMode;
+        $this->batchMode = false;
         $files = is_array($filePath) ? $filePath : [$filePath];
 
         $result = [];
@@ -58,6 +60,8 @@ trait Market
             $uploadData = $this->photosUploadToServer($uploadUrl, $files[$i]);
             $result[] = $this->photosSaveMarketPhoto($uploadData, $groupId)['response'][0]['id'];
         }
+        $this->batchMode = $oldBatchMode;
+
         if (!is_array($filePath)) {
             return reset($result);
         }

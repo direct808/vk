@@ -62,6 +62,16 @@ class MarketTest extends TestCase
     }
 
     /**
+     * @depends testGetMarketUploadServer
+     * @param string $url
+     */
+    function testMarketUploadPhotoToServerExceptionsEmptyUrl($url)
+    {
+        $this->expectException(VkException::class);
+        $this->vk->photosUploadToServer($url, 'bad url');
+    }
+
+    /**
      * @param array $photoData
      * @depends testMarketUploadPhotoToServer
      */
@@ -118,7 +128,7 @@ class MarketTest extends TestCase
             'category_id' => 300,
             'price' => 200,
             'main_photo_id' => $photo,
-            'photo_ids' =>$photo,
+            'photo_ids' => $photo,
         ]);
     }
 
@@ -126,6 +136,7 @@ class MarketTest extends TestCase
     /**
      * @depends testMarketAdd
      * @param array $data
+     * @return integer
      */
     function testMarketEdit($data)
     {
@@ -139,9 +150,19 @@ class MarketTest extends TestCase
             'main_photo_id' => $data[1],
             'photo_ids' => $data[1],
         ]);
-
         $this->assertTrue($result);
+        return $data[0];
     }
 
+
+    /**
+     * @depends testMarketEdit
+     * @param integer $itemId
+     */
+    function testMarketDelete($itemId)
+    {
+        $result = $this->vk->marketDelete(-getenv('GROUP_ID'), $itemId);
+        $this->assertTrue($result);
+    }
 
 }

@@ -2,7 +2,7 @@
 
 namespace Direct808\Vk\Exception;
 
-class CurlException extends \Exception
+class CurlException extends VkException
 {
 
     public function __construct($message = "", $code = 0, \Throwable $previous = null)
