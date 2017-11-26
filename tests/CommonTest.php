@@ -11,11 +11,14 @@ class CommonTest extends TestCase
      * @var Vk;
      */
     private $vk;
+    private $image;
+
 
     protected function setUp()
     {
         $this->vk = new Vk();
         $this->vk->setAccessToken(getenv('ACCESS_TOKEN'));
+        $this->image = __DIR__ . '/400.gif';
     }
 
     /** @test */
@@ -24,11 +27,8 @@ class CommonTest extends TestCase
 
 
         $result = $this->vk->batch(function () {
-
-
             for ($i = 0; $i < 25; $i++) {
-
-                $photo = $this->vk->marketUploadPhotos('https://fakeimg.pl/405x405/', getenv('GROUP_ID'), true);
+                $photo = $this->vk->marketUploadPhotos($this->image, getenv('GROUP_ID'), true);
                 $this->vk->marketAdd([
                     'owner_id' => -getenv('GROUP_ID'),
                     'name' => "Market name",
@@ -37,7 +37,6 @@ class CommonTest extends TestCase
                     'price' => 100,
                     'main_photo_id' => $photo,
 //                'photo_ids' => $photo,
-
                 ]);
             }
         });
@@ -79,7 +78,7 @@ if (tovars.count> i)
     return 1;
 
 return 0;");
-        } while ($result['response'] == 1);
+        } while ($result == 1);
 
         print_r($result);
 

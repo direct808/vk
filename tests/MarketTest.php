@@ -15,11 +15,13 @@ class MarketTest extends TestCase
      * @var Vk;
      */
     private $vk;
+    private $image;
 
     protected function setUp()
     {
         $this->vk = new Vk();
         $this->vk->setAccessToken(getenv('ACCESS_TOKEN'));
+        $this->image = __DIR__ . '/400.gif';
     }
 
     function testGetMarketUploadServer()
@@ -46,7 +48,7 @@ class MarketTest extends TestCase
      */
     function testMarketUploadPhotoToServer($url)
     {
-        $photoData = $this->vk->photosUploadToServer($url, 'https://fakeimg.pl/400x400/');
+        $photoData = $this->vk->photosUploadToServer($url, $this->image);
         $this->assertJson($photoData['photo']);
         return $photoData;
     }
@@ -58,7 +60,7 @@ class MarketTest extends TestCase
     function testMarketUploadPhotoToServerExceptions($url)
     {
         $this->expectException(VkException::class);
-        $this->vk->photosUploadToServer($url, 'http://ru-free-tor.org/download/592095');
+        $this->vk->photosUploadToServer($url, __FILE__);
     }
 
     /**
@@ -79,9 +81,9 @@ class MarketTest extends TestCase
     {
         $result = $this->vk->photosSaveMarketPhoto($photoData, getenv('GROUP_ID'));
 
-        $this->assertTrue($result['response'][0]['id'] > 0);
+        $this->assertTrue($result[0]['id'] > 0);
 
-        return $result['response'][0]['id'];
+        return $result[0]['id'];
     }
 
     function testMarketAddException()
@@ -115,7 +117,7 @@ class MarketTest extends TestCase
 
     function testMarketEditItemNotFoundException()
     {
-        $photo = $this->vk->marketUploadPhotos('https://fakeimg.pl/405x405/', getenv('GROUP_ID'));
+        $photo = $this->vk->marketUploadPhotos($this->image, getenv('GROUP_ID'));
 
         $this->expectException(ItemNotFoundException::class);
         $this->expectExceptionCode(1403);

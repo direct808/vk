@@ -9,14 +9,14 @@ trait Market
     {
         $response = $this->callMethod('market.add', $parameters);
 
-        return $response['response']['market_item_id'];
+        return $response['market_item_id'];
     }
 
     public function marketEdit(array $parameters)
     {
         $response = $this->callMethod('market.edit', $parameters);
 
-        return $response['response'] == 1;
+        return $response == 1;
     }
 
     public function marketGet(array $parameters)
@@ -35,7 +35,7 @@ trait Market
         ];
         $response = $this->callMethod('market.delete', $parameters);
 
-        return $response['response'] == 1;
+        return $response == 1;
     }
 
     public function marketGetById(array $parameters)
@@ -58,7 +58,7 @@ trait Market
                 'main_photo' => $firstIsMain && $i == 0 ? 1 : 0,
             ]);
             $uploadData = $this->photosUploadToServer($uploadUrl, $files[$i]);
-            $result[] = $this->photosSaveMarketPhoto($uploadData, $groupId)['response'][0]['id'];
+            $result[] = $this->photosSaveMarketPhoto($uploadData, $groupId)[0]['id'];
         }
         $this->batchMode = $oldBatchMode;
 

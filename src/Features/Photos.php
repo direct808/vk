@@ -10,15 +10,13 @@ trait Photos
     public function photosGetMarketUploadServer($params)
     {
         $result = $this->callMethod('photos.getMarketUploadServer', $params);
-        return $result['response']['upload_url'];
+        return $result['upload_url'];
     }
 
     public function photosUploadToServer($uploadUrl, $file)
     {
         $filePath = tempnam(sys_get_temp_dir(), 'vk');
-
         $f = @file_get_contents($file);
-
         if ($f === false) {
             $err = error_get_last();
             throw new VkException($err['message']);

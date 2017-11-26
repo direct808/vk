@@ -30,7 +30,7 @@ class Vk
         $parameters['access_token'] = $this->token;
         $parameters['v'] = $this->apiVersion;
         $result = $this->query($url, $parameters);
-        return $result;
+        return $result['response'];
     }
 
     private function callMethodBatch($method, array $parameters = [])
@@ -46,6 +46,7 @@ class Vk
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $parameters);
+//        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
 
