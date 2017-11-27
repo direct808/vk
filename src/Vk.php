@@ -13,6 +13,17 @@ class Vk
     private $apiVersion = "5.69";
     private $batchMode;
     private $batches = [];
+    private $queryService;
+
+    private $lastQueryDuration = 0;
+    private $interval = 333.33333333333333;  //ms
+
+    public function __construct($options = [], $queryEngine = null)
+    {
+        if (!$queryEngine)
+            $queryEngine = new CurlQueryEngine();
+        $this->queryService = $queryEngine;
+    }
 
     public function setAccessToken($token)
     {
@@ -23,13 +34,30 @@ class Vk
 
     public function callMethod($method, array $parameters = [])
     {
-        if ($this->batchMode)
-            return $this->callMethodBatch($method, $parameters);
+        if ($this->batchMode) {
+            $this->callMethodBatch($method, $parameters);
+            return null;
+        }
+
+
+
+
+
+        if ($this->lastQueryDuration > 0 && ($this->lastQueryDuration < $this->interval)) {
+
+            $timeout = ($this->interval - $this->lastQueryDuration) ;
+            usleep($timeout* 1000);
+            echo 'usleep ' . ($timeout) . PHP_EOL;
+        }
 
         $url = "https://api.vk.com/method/$method";
         $parameters['access_token'] = $this->token;
         $parameters['v'] = $this->apiVersion;
+
+        $curTime = microtime(true);
         $result = $this->query($url, $parameters);
+        $this->lastQueryDuration = ((microtime(true) - $curTime) * 1000);
+
         return $result['response'];
     }
 
@@ -41,25 +69,12 @@ class Vk
 
     private function query($url, array $parameters = [])
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $parameters);
-//        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $result = curl_exec($ch);
-
-        if ($result === false) {
-            throw new Exception\CurlException(curl_error($ch), curl_errno($ch));
-        }
-
+        $result = $this->queryService->query($url, $parameters);;
         $result = json_decode($result, true);
 
         if (isset($result['error'])) {
             $this->handleError($result['error']);
         }
-
         return $result;
     }
 
@@ -76,6 +91,8 @@ class Vk
                 throw new Exception\UnknownMethodVkException($message);
             case 5:
                 throw new Exception\UserAuthVkException($message);
+            case 6:
+                throw new Exception\ManyRequestVkException($message);
             case 12:
                 throw new Exception\UnableCompileCodeVkException($message);
             case 13:

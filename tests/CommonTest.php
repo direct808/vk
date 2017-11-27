@@ -2,8 +2,10 @@
 
 namespace Test;
 
+use Direct808\Vk\Exception\ManyRequestVkException;
 use Direct808\Vk\Vk;
 use PHPUnit\Framework\TestCase;
+use Test\Helpers\TestQueryEngine;
 
 class CommonTest extends TestCase
 {
@@ -86,6 +88,35 @@ return 0;");
 //        $this->expectException(UserAuthVkException::class);
 //        $this->vk->setAccessToken('bad_token');
 //        $this->vk->execute('asdasd');
+    }
+
+    function testManyRequestPerSecond()
+    {
+        $this->expectException(ManyRequestVkException::class);
+        $this->expectExceptionCode(6);
+        $this->expectExceptionMessage('Too many requests per second');
+        for ($i = 0; $i < 50; $i++) {
+            $this->vk->marketGetById([
+                'item_ids' => -getenv('GROUP_ID') . '_34234'
+            ]);
+        }
+        $this->assertTrue(false, 'Скрипт должен был выбросить исключени "Too many requests per second"');
+    }
+
+    function testManyRequestPerSecond2()
+    {
+        $queryEngine = new TestQueryEngine();
+
+        $vk = new Vk([], $queryEngine);
+
+        $startTime = microtime(true);
+        for ($i = 0; $i < 4; $i++) {
+            $vk->callMethod('market.getById', []);
+        }
+        $curTime = microtime(true) - $startTime;
+        echo   PHP_EOL.'total ' . round($curTime * 1000) . PHP_EOL;
+        echo PHP_EOL;
+//        $this->assertTrue(false, 'Скрипт должен был выбросить исключени "Too many requests per second"');
     }
 
 }
