@@ -16,12 +16,16 @@ class ExceptionTest extends TestCase
     /**
      * @var Vk;
      */
-    private $vk;
+    static $vk;
+
+    public static function setUpBeforeClass()
+    {
+        self::$vk = new Vk();
+    }
 
     protected function setUp()
     {
-        $this->vk = new Vk();
-        $this->vk->setAccessToken(getenv('ACCESS_TOKEN'));
+        self::$vk->setAccessToken(getenv('ACCESS_TOKEN'));
     }
 
     /** @test */
@@ -30,8 +34,8 @@ class ExceptionTest extends TestCase
         $this->expectException(UserAuthVkException::class);
         $this->expectExceptionCode(5);
 
-        $this->vk->setAccessToken('bad_token');
-        $this->vk->callMethod('account.getInfo');
+        self::$vk->setAccessToken('bad_token');
+        self::$vk->callMethod('account.getInfo');
     }
 
     /** @test */
@@ -40,7 +44,7 @@ class ExceptionTest extends TestCase
         $this->expectException(AccessDeniedVkException::class);
         $this->expectExceptionCode(15);
 
-        $this->vk->callMethod('market.delete', [
+        self::$vk->callMethod('market.delete', [
             'owner_id' => -31456119,
             'item_id' => 123123,
         ]);
@@ -52,7 +56,7 @@ class ExceptionTest extends TestCase
         $this->expectException(ParametersMissingVkException::class);
         $this->expectExceptionCode(100);
 
-        $this->vk->callMethod('market.delete', []);
+        self::$vk->callMethod('market.delete', []);
     }
 
     /** @test */
@@ -61,7 +65,7 @@ class ExceptionTest extends TestCase
         $this->expectException(UnknownMethodVkException::class);
         $this->expectExceptionCode(3);
 
-        $this->vk->callMethod('bad_method', []);
+        self::$vk->callMethod('bad_method', []);
     }
 
 
@@ -71,7 +75,7 @@ class ExceptionTest extends TestCase
         $this->expectException(UnableCompileCodeVkException::class);
         $this->expectExceptionCode(12);
 
-        $this->vk->execute('bad code (((');
+        self::$vk->execute('bad code (((');
     }
 
     /** @test */
@@ -81,7 +85,7 @@ class ExceptionTest extends TestCase
         $this->expectException(RuntimeErrorVkException::class);
         $this->expectExceptionCode(13);
 
-        $this->vk->execute('var a=1/0;');
+        self::$vk->execute('var a=1/0;');
     }
 
 }

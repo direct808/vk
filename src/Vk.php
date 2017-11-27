@@ -15,8 +15,8 @@ class Vk
     private $batches = [];
     private $queryService;
 
-    private $lastQueryDuration = 0;
-    private $interval = 333.33333333333333;  //ms
+    private $lastQueryTimestamp = 0;
+    private $queryDuration = 100;  //ms
 
     public function __construct($options = [], $queryEngine = null)
     {
@@ -39,26 +39,32 @@ class Vk
             return null;
         }
 
-
-
-
-
-        if ($this->lastQueryDuration > 0 && ($this->lastQueryDuration < $this->interval)) {
-
-            $timeout = ($this->interval - $this->lastQueryDuration) ;
-            usleep($timeout* 1000);
-            echo 'usleep ' . ($timeout) . PHP_EOL;
-        }
+        $this->processWait();
 
         $url = "https://api.vk.com/method/$method";
         $parameters['access_token'] = $this->token;
         $parameters['v'] = $this->apiVersion;
 
-        $curTime = microtime(true);
+        $this->lastQueryTimestamp = microtime(true);
         $result = $this->query($url, $parameters);
-        $this->lastQueryDuration = ((microtime(true) - $curTime) * 1000);
+
 
         return $result['response'];
+    }
+
+    private function processWait()
+    {
+        if ($this->lastQueryTimestamp == 0)
+            return;
+
+        $curTime = microtime(true);
+        $lastQueryDuration = ($curTime - $this->lastQueryTimestamp);
+        $lastQueryDurationMs = $lastQueryDuration * 1000;
+
+        if ($lastQueryDurationMs < $this->queryDuration) {
+            $timeout = ($this->queryDuration - $lastQueryDurationMs);
+            usleep($timeout * 1000);
+        }
     }
 
     private function callMethodBatch($method, array $parameters = [])
@@ -77,6 +83,18 @@ class Vk
         }
         return $result;
     }
+
+     private function queryAsync(array $data)
+    {
+        $result = $this->queryService->queryAsync($data);;
+//        $result = json_decode($result, true);
+//
+//        if (isset($result['error'])) {
+//            $this->handleError($result['error']);
+//        }
+        return $result;
+    }
+
 
     private function handleError($error)
     {
@@ -110,10 +128,12 @@ class Vk
         throw new Exception\VkException($message, $code);
     }
 
+
     public function execute($code)
     {
         return $this->callMethod('execute', ['code' => $code]);
     }
+
 
     public function batch(\Closure $closure)
     {
@@ -131,6 +151,24 @@ class Vk
         $str = implode("\n", $this->batches);
 
         return $this->execute($str);
+    }
+
+    /**
+     * @return int
+     */
+    public function getQueryDuration()
+    {
+        return $this->queryDuration;
+    }
+
+    /**
+     * @param int $ms
+     * @return $this
+     */
+    public function setQueryDuration($ms)
+    {
+        $this->queryDuration = $ms;
+        return $this;
     }
 
 }

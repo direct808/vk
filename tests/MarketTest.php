@@ -14,19 +14,25 @@ class MarketTest extends TestCase
     /**
      * @var Vk;
      */
-    private $vk;
-    private $image;
+    static $vk;
+    static $image;
+
+
+    public static function setUpBeforeClass()
+    {
+        self::$vk = new Vk();
+        self::$image = __DIR__ . '/400.gif';
+    }
 
     protected function setUp()
     {
-        $this->vk = new Vk();
-        $this->vk->setAccessToken(getenv('ACCESS_TOKEN'));
-        $this->image = __DIR__ . '/400.gif';
+        self::$vk->setAccessToken(getenv('ACCESS_TOKEN'));
     }
+
 
     function testGetMarketUploadServer()
     {
-        $url = $this->vk->photosGetMarketUploadServer([
+        $url = self::$vk->photosGetMarketUploadServer([
             'main_photo' => 1,
             'group_id' => getenv('GROUP_ID')
         ]);
@@ -37,7 +43,7 @@ class MarketTest extends TestCase
     function testGetMarketUploadServerExceptions()
     {
         $this->expectException(ParametersMissingVkException::class);
-        $this->vk->photosGetMarketUploadServer([]);
+        self::$vk->photosGetMarketUploadServer([]);
     }
 
 
@@ -48,7 +54,7 @@ class MarketTest extends TestCase
      */
     function testMarketUploadPhotoToServer($url)
     {
-        $photoData = $this->vk->photosUploadToServer($url, $this->image);
+        $photoData = self::$vk->photosUploadToServer($url, self::$image);
         $this->assertJson($photoData['photo']);
         return $photoData;
     }
@@ -60,7 +66,7 @@ class MarketTest extends TestCase
     function testMarketUploadPhotoToServerExceptions($url)
     {
         $this->expectException(VkException::class);
-        $this->vk->photosUploadToServer($url, __FILE__);
+        self::$vk->photosUploadToServer($url, __FILE__);
     }
 
     /**
@@ -70,7 +76,7 @@ class MarketTest extends TestCase
     function testMarketUploadPhotoToServerExceptionsEmptyUrl($url)
     {
         $this->expectException(VkException::class);
-        $this->vk->photosUploadToServer($url, 'bad url');
+        self::$vk->photosUploadToServer($url, 'bad url');
     }
 
     /**
@@ -79,7 +85,7 @@ class MarketTest extends TestCase
      */
     function testMarketSavePhoto($photoData)
     {
-        $result = $this->vk->photosSaveMarketPhoto($photoData, getenv('GROUP_ID'));
+        $result = self::$vk->photosSaveMarketPhoto($photoData, getenv('GROUP_ID'));
 
         $this->assertTrue($result[0]['id'] > 0);
 
@@ -89,7 +95,7 @@ class MarketTest extends TestCase
     function testMarketAddException()
     {
         $this->expectException(ParametersMissingVkException::class);
-        $this->vk->marketAdd([]);
+        self::$vk->marketAdd([]);
     }
 
 
@@ -100,7 +106,7 @@ class MarketTest extends TestCase
      */
     function testMarketAdd($photoId)
     {
-        $id = $this->vk->marketAdd([
+        $id = self::$vk->marketAdd([
             'owner_id' => -getenv('GROUP_ID'),
             'name' => "Market name",
             'description' => "Market description",
@@ -117,12 +123,12 @@ class MarketTest extends TestCase
 
     function testMarketEditItemNotFoundException()
     {
-        $photo = $this->vk->marketUploadPhotos($this->image, getenv('GROUP_ID'));
+        $photo = self::$vk->marketUploadPhotos(self::$image, getenv('GROUP_ID'));
 
         $this->expectException(ItemNotFoundException::class);
         $this->expectExceptionCode(1403);
 
-        $this->vk->marketEdit([
+        self::$vk->marketEdit([
             'owner_id' => -getenv('GROUP_ID'),
             'item_id' => 1111111,
             'name' => "Market name updated",
@@ -142,7 +148,7 @@ class MarketTest extends TestCase
      */
     function testMarketEdit($data)
     {
-        $result = $this->vk->marketEdit([
+        $result = self::$vk->marketEdit([
             'owner_id' => -getenv('GROUP_ID'),
             'item_id' => $data[0],
             'name' => "Market name updated",
@@ -163,7 +169,7 @@ class MarketTest extends TestCase
      */
     function testMarketDelete($itemId)
     {
-        $result = $this->vk->marketDelete(-getenv('GROUP_ID'), $itemId);
+        $result = self::$vk->marketDelete(-getenv('GROUP_ID'), $itemId);
         $this->assertTrue($result);
     }
 

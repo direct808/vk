@@ -5,7 +5,7 @@ namespace Test;
 use Direct808\Vk\Exception\ManyRequestVkException;
 use Direct808\Vk\Vk;
 use PHPUnit\Framework\TestCase;
-use Test\Helpers\TestQueryEngine;
+use Test\Helpers\FakeQueryEngine;
 
 class CommonTest extends TestCase
 {
@@ -26,76 +26,44 @@ class CommonTest extends TestCase
     /** @test */
     function sdfsdf()
     {
+        $images = array_fill(0, 4, $this->image);
 
+        for ($i = 0; $i < 3; $i++) {
 
-        $result = $this->vk->batch(function () {
-            for ($i = 0; $i < 25; $i++) {
-                $photo = $this->vk->marketUploadPhotos($this->image, getenv('GROUP_ID'), true);
-                $this->vk->marketAdd([
-                    'owner_id' => -getenv('GROUP_ID'),
-                    'name' => "Market name",
-                    'description' => "Market description",
-                    'category_id' => 500,
-                    'price' => 100,
-                    'main_photo_id' => $photo,
-//                'photo_ids' => $photo,
-                ]);
-            }
-        });
+            $photos = $this->vk->marketUploadPhotos($images, getenv('GROUP_ID'), true);
+            $mainPhoto = reset($photos);
 
-
-        file_put_contents(__DIR__ . '/asd.php', "<?php\n" . var_export($result, true) . ';');
+            $this->vk->marketAdd([
+                'owner_id' => -getenv('GROUP_ID'),
+                'name' => "Market name $i",
+                'description' => "Market description $i",
+                'category_id' => 500,
+                'price' => 100,
+                'main_photo_id' => $mainPhoto,
+                'photo_ids' => implode(',', $photos),
+            ]);
+        }
 
         $this->assertTrue(true);
-//        $this->expectException(UserAuthVkException::class);
-//        $this->vk->setAccessToken('bad_token');
-//        $this->vk->execute('asdasd');
     }
+
 
     /** @test */
-    function delete_all_tovars()
+    function market_delete_all()
     {
         $groupId = getenv('GROUP_ID');
-//        $result = $this->vk->marketGet([
-//            'owner_id' => -$groupId,
-//            'count' => 200
-//        ]);
-
-        do {
-
-
-            $result = $this->vk->execute("var tovars = API.market.get({\"owner_id\": -$groupId});
-
-if (tovars.items.length == 0)
-    return 0;
-
-var i = 0;
-
-while (i < tovars.items.length && i<24) {
-    API.market.delete({\"owner_id\": -$groupId, \"item_id\": tovars.items[i].id});
-    i = i + 1;
-}
-
-if (tovars.count> i)
-    return 1;
-
-return 0;");
-        } while ($result == 1);
-
-        print_r($result);
-
+        $this->vk->marketDeleteAll(-$groupId);
         $this->assertTrue(true);
-//        $this->expectException(UserAuthVkException::class);
-//        $this->vk->setAccessToken('bad_token');
-//        $this->vk->execute('asdasd');
     }
+
 
     function testManyRequestPerSecond()
     {
+//        $this->vk->setQueryDuration(10);
         $this->expectException(ManyRequestVkException::class);
         $this->expectExceptionCode(6);
         $this->expectExceptionMessage('Too many requests per second');
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             $this->vk->marketGetById([
                 'item_ids' => -getenv('GROUP_ID') . '_34234'
             ]);
@@ -103,20 +71,40 @@ return 0;");
         $this->assertTrue(false, 'Скрипт должен был выбросить исключени "Too many requests per second"');
     }
 
-    function testManyRequestPerSecond2()
+
+    function testQueryDuration()
     {
-        $queryEngine = new TestQueryEngine();
+        $queryEngine = new FakeQueryEngine();
+        $queryEngine->wait = 50;
 
         $vk = new Vk([], $queryEngine);
+        $vk->setQueryDuration(200);
 
         $startTime = microtime(true);
-        for ($i = 0; $i < 4; $i++) {
-            $vk->callMethod('market.getById', []);
-        }
-        $curTime = microtime(true) - $startTime;
-        echo   PHP_EOL.'total ' . round($curTime * 1000) . PHP_EOL;
-        echo PHP_EOL;
-//        $this->assertTrue(false, 'Скрипт должен был выбросить исключени "Too many requests per second"');
+        $vk->callMethod('market.getById', []);
+        $duration = round((microtime(true) - $startTime) * 1000);
+        $this->assertEquals($duration, $queryEngine->wait, 'Первый запрос к апи должен продлиться без задержки');
+
+
+        $startTime = microtime(true);
+        $vk->callMethod('market.getById', []);
+        $duration = round((microtime(true) - $startTime) * 1000);
+        $this->assertTrue(abs($duration - $vk->getQueryDuration()) < 5, 'Остальные запросы должны придерживаться определенной задержки');
+
+
+        $startTime = microtime(true);
+        $vk->callMethod('market.getById', []);
+        $duration = round((microtime(true) - $startTime) * 1000);
+        $this->assertTrue(abs($duration - $vk->getQueryDuration()) < 5, 'Остальные запросы должны придерживаться определенной задержки');
+
+        usleep(160 * 1000);
+
+        $startTime = microtime(true);
+        $vk->callMethod('market.getById', []);
+        $duration = round((microtime(true) - $startTime) * 1000);
+        $this->assertEquals($duration, $queryEngine->wait, 'Этот запрос должен выполниться без задержки, т.к. выше создана искуственная задержка превышающая интервал');
+
+
     }
 
 }

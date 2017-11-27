@@ -68,4 +68,30 @@ trait Market
         return $result;
     }
 
+    public function marketDeleteAll($ownerId)
+    {
+        $code = " 
+            var goods = API.market.get({\"owner_id\": $ownerId});
+            if (goods.count == 0)
+                return 0;
+            
+            var i = 0;
+            
+            while (i < goods.items.length && i<24) {
+                API.market.delete({\"owner_id\": $ownerId, \"item_id\": goods.items[i].id});
+                i = i + 1;
+            }
+            
+            if (goods.count > i)
+                return 1;
+            
+            return 0;
+        ";
+
+        do {
+            $result = $this->execute($code);
+        } while ($result == 1);
+    }
+
+
 }
