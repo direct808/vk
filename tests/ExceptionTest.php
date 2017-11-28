@@ -2,36 +2,16 @@
 
 namespace Test;
 
-use Direct808\Vk\Exception\AccessDeniedVkException;
-use Direct808\Vk\Exception\ParametersMissingVkException;
-use Direct808\Vk\Exception\RuntimeErrorVkException;
-use Direct808\Vk\Exception\UnableCompileCodeVkException;
-use Direct808\Vk\Exception\UnknownMethodVkException;
-use Direct808\Vk\Exception\UserAuthVkException;
-use Direct808\Vk\Vk;
-use PHPUnit\Framework\TestCase;
+use Direct808\Vk\Exception;
+use Test\Helpers\VkTestCase;
 
-class ExceptionTest extends TestCase
+class ExceptionTest extends VkTestCase
 {
-    /**
-     * @var Vk;
-     */
-    static $vk;
-
-    public static function setUpBeforeClass()
-    {
-        self::$vk = new Vk();
-    }
-
-    protected function setUp()
-    {
-        self::$vk->setAccessToken(getenv('ACCESS_TOKEN'));
-    }
 
     /** @test */
-    function bad_access_token()
+    public function badAccessToken()
     {
-        $this->expectException(UserAuthVkException::class);
+        $this->expectException(Exception\UserAuthVkException::class);
         $this->expectExceptionCode(5);
 
         self::$vk->setAccessToken('bad_token');
@@ -39,9 +19,9 @@ class ExceptionTest extends TestCase
     }
 
     /** @test */
-    function access_denied()
+    public function accessDenied()
     {
-        $this->expectException(AccessDeniedVkException::class);
+        $this->expectException(Exception\AccessDeniedVkException::class);
         $this->expectExceptionCode(15);
 
         self::$vk->callMethod('market.delete', [
@@ -51,18 +31,18 @@ class ExceptionTest extends TestCase
     }
 
     /** @test */
-    function parameters_missing()
+    public function parametersMissing()
     {
-        $this->expectException(ParametersMissingVkException::class);
+        $this->expectException(Exception\ParametersMissingVkException::class);
         $this->expectExceptionCode(100);
 
         self::$vk->callMethod('market.delete', []);
     }
 
     /** @test */
-    function unknown_method()
+    public function unknownMethod()
     {
-        $this->expectException(UnknownMethodVkException::class);
+        $this->expectException(Exception\UnknownMethodVkException::class);
         $this->expectExceptionCode(3);
 
         self::$vk->callMethod('bad_method', []);
@@ -70,9 +50,9 @@ class ExceptionTest extends TestCase
 
 
     /** @test */
-    function unable_to_compile_code()
+    public function unableToCompileCode()
     {
-        $this->expectException(UnableCompileCodeVkException::class);
+        $this->expectException(Exception\UnableCompileCodeVkException::class);
         $this->expectExceptionCode(12);
 
         self::$vk->execute('bad code (((');
@@ -80,12 +60,11 @@ class ExceptionTest extends TestCase
 
     /** @test */
 
-    function runtime_error()
+    public function runtimeError()
     {
-        $this->expectException(RuntimeErrorVkException::class);
+        $this->expectException(Exception\RuntimeErrorVkException::class);
         $this->expectExceptionCode(13);
 
         self::$vk->execute('var a=1/0;');
     }
-
 }

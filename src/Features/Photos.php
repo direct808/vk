@@ -37,7 +37,6 @@ trait Photos
     {
         $queryArr = [];
         foreach ($data as $datum) {
-
             $file = $datum['file'];
 
             $filePath = tempnam(sys_get_temp_dir(), 'vk');

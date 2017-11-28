@@ -2,35 +2,13 @@
 
 namespace Test;
 
+use Direct808\Vk\Exception;
+use Test\Helpers\VkTestCase;
 
-use Direct808\Vk\Exception\ItemNotFoundException;
-use Direct808\Vk\Exception\ParametersMissingVkException;
-use Direct808\Vk\Exception\VkException;
-use Direct808\Vk\Vk;
-use PHPUnit\Framework\TestCase;
-
-class MarketTest extends TestCase
+class MarketTest extends VkTestCase
 {
-    /**
-     * @var Vk;
-     */
-    static $vk;
-    static $image;
 
-
-    public static function setUpBeforeClass()
-    {
-        self::$vk = new Vk();
-        self::$image = __DIR__ . '/400.gif';
-    }
-
-    protected function setUp()
-    {
-        self::$vk->setAccessToken(getenv('ACCESS_TOKEN'));
-    }
-
-
-    function testGetMarketUploadServer()
+    public function testGetMarketUploadServer()
     {
         $url = self::$vk->photosGetMarketUploadServer([
             'main_photo' => 1,
@@ -40,9 +18,9 @@ class MarketTest extends TestCase
         return $url;
     }
 
-    function testGetMarketUploadServerExceptions()
+    public function testGetMarketUploadServerExceptions()
     {
-        $this->expectException(ParametersMissingVkException::class);
+        $this->expectException(Exception\ParametersMissingVkException::class);
         self::$vk->photosGetMarketUploadServer([]);
     }
 
@@ -52,7 +30,7 @@ class MarketTest extends TestCase
      * @param string $url
      * @return
      */
-    function testMarketUploadPhotoToServer($url)
+    public function testMarketUploadPhotoToServer($url)
     {
         $photoData = self::$vk->photosUploadToServer($url, self::$image);
         $this->assertJson($photoData['photo']);
@@ -63,9 +41,9 @@ class MarketTest extends TestCase
      * @depends testGetMarketUploadServer
      * @param string $url
      */
-    function testMarketUploadPhotoToServerExceptions($url)
+    public function testMarketUploadPhotoToServerExceptions($url)
     {
-        $this->expectException(VkException::class);
+        $this->expectException(Exception\VkException::class);
         self::$vk->photosUploadToServer($url, __FILE__);
     }
 
@@ -73,9 +51,9 @@ class MarketTest extends TestCase
      * @depends testGetMarketUploadServer
      * @param string $url
      */
-    function testMarketUploadPhotoToServerExceptionsEmptyUrl($url)
+    public function testMarketUploadPhotoToServerExceptionsEmptyUrl($url)
     {
-        $this->expectException(VkException::class);
+        $this->expectException(Exception\VkException::class);
         self::$vk->photosUploadToServer($url, 'bad url');
     }
 
@@ -83,7 +61,7 @@ class MarketTest extends TestCase
      * @param array $photoData
      * @depends testMarketUploadPhotoToServer
      */
-    function testMarketSavePhoto($photoData)
+    public function testMarketSavePhoto($photoData)
     {
         $result = self::$vk->photosSaveMarketPhoto($photoData, getenv('GROUP_ID'));
 
@@ -92,9 +70,9 @@ class MarketTest extends TestCase
         return $result[0]['id'];
     }
 
-    function testMarketAddException()
+    public function testMarketAddException()
     {
-        $this->expectException(ParametersMissingVkException::class);
+        $this->expectException(Exception\ParametersMissingVkException::class);
         self::$vk->marketAdd([]);
     }
 
@@ -104,7 +82,7 @@ class MarketTest extends TestCase
      * @depends testMarketSavePhoto
      * @return array
      */
-    function testMarketAdd($photoId)
+    public function testMarketAdd($photoId)
     {
         $id = self::$vk->marketAdd([
             'owner_id' => -getenv('GROUP_ID'),
@@ -121,11 +99,11 @@ class MarketTest extends TestCase
     }
 
 
-    function testMarketEditItemNotFoundException()
+    public function testMarketEditItemNotFoundException()
     {
         $photo = self::$vk->marketUploadPhotos(self::$image, getenv('GROUP_ID'));
 
-        $this->expectException(ItemNotFoundException::class);
+        $this->expectException(Exception\ItemNotFoundException::class);
         $this->expectExceptionCode(1403);
 
         self::$vk->marketEdit([
@@ -146,7 +124,7 @@ class MarketTest extends TestCase
      * @param array $data
      * @return integer
      */
-    function testMarketEdit($data)
+    public function testMarketEdit($data)
     {
         $result = self::$vk->marketEdit([
             'owner_id' => -getenv('GROUP_ID'),
@@ -167,10 +145,9 @@ class MarketTest extends TestCase
      * @depends testMarketEdit
      * @param integer $itemId
      */
-    function testMarketDelete($itemId)
+    public function testMarketDelete($itemId)
     {
         $result = self::$vk->marketDelete(-getenv('GROUP_ID'), $itemId);
         $this->assertTrue($result);
     }
-
 }

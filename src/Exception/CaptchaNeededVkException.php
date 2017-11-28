@@ -22,6 +22,4 @@ class CaptchaNeededVkException extends VkException
     {
         return $this->data['captcha_sid'];
     }
-
-
 }

@@ -92,6 +92,4 @@ trait Market
             $result = $this->execute($code);
         } while ($result == 1);
     }
-
-
 }

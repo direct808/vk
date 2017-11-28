@@ -9,4 +9,3 @@ class RuntimeErrorVkException extends VkException
         parent::__construct($message, $code, $previous);
     }
 }
-

@@ -9,4 +9,3 @@ class UnableCompileCodeVkException extends VkException
         parent::__construct($message, $code, $previous);
     }
 }
-

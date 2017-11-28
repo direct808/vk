@@ -4,36 +4,23 @@ namespace Test;
 
 use Direct808\Vk\Exception\ManyRequestVkException;
 use Direct808\Vk\Vk;
-use PHPUnit\Framework\TestCase;
 use Test\Helpers\FakeQueryEngine;
+use Test\Helpers\VkTestCase;
 
-class CommonTest extends TestCase
+class CommonTest extends VkTestCase
 {
-    /**
-     * @var Vk;
-     */
-    private $vk;
-    private $image;
-
-
-    protected function setUp()
-    {
-        $this->vk = new Vk();
-        $this->vk->setAccessToken(getenv('ACCESS_TOKEN'));
-        $this->image = __DIR__ . '/400.gif';
-    }
 
     /** @test */
-    function sdfsdf()
+    public function uploadManyAdvertsAndImages()
     {
-        $images = array_fill(0, 4, $this->image);
+        $images = array_fill(0, 4, self::$image);
+        self::$vk->setQueryDuration(100);
 
-        for ($i = 0; $i < 3; $i++) {
-
-            $photos = $this->vk->marketUploadPhotos($images, getenv('GROUP_ID'), true);
+        for ($i = 0; $i < 5; $i++) {
+            $photos = self::$vk->marketUploadPhotos($images, getenv('GROUP_ID'), true);
             $mainPhoto = reset($photos);
 
-            $this->vk->marketAdd([
+            self::$vk->marketAdd([
                 'owner_id' => -getenv('GROUP_ID'),
                 'name' => "Market name $i",
                 'description' => "Market description $i",
@@ -49,30 +36,34 @@ class CommonTest extends TestCase
 
 
     /** @test */
-    function market_delete_all()
+    public function marketDeleteAll()
     {
         $groupId = getenv('GROUP_ID');
-        $this->vk->marketDeleteAll(-$groupId);
+        self::$vk->marketDeleteAll(-$groupId);
         $this->assertTrue(true);
     }
 
+    /** @test */
 
-    function testManyRequestPerSecond()
+    public function manyRequestPerSecond()
     {
-//        $this->vk->setQueryDuration(10);
+        self::$vk->setQueryDuration(10);
         $this->expectException(ManyRequestVkException::class);
         $this->expectExceptionCode(6);
         $this->expectExceptionMessage('Too many requests per second');
         for ($i = 0; $i < 20; $i++) {
-            $this->vk->marketGetById([
+            self::$vk->marketGetById([
                 'item_ids' => -getenv('GROUP_ID') . '_34234'
             ]);
         }
-        $this->assertTrue(false, 'Скрипт должен был выбросить исключени "Too many requests per second"');
+        $this->assertTrue(
+            false,
+            'Скрипт должен был выбросить исключение "Too many requests per second"'
+        );
     }
 
 
-    function testQueryDuration()
+    public function queryDuration()
     {
         $queryEngine = new FakeQueryEngine();
         $queryEngine->wait = 50;
@@ -83,28 +74,42 @@ class CommonTest extends TestCase
         $startTime = microtime(true);
         $vk->callMethod('market.getById', []);
         $duration = round((microtime(true) - $startTime) * 1000);
-        $this->assertEquals($duration, $queryEngine->wait, 'Первый запрос к апи должен продлиться без задержки');
+        $this->assertEquals(
+            $duration,
+            $queryEngine->wait,
+            'Первый запрос к апи должен продлиться без задержки'
+        );
 
 
         $startTime = microtime(true);
         $vk->callMethod('market.getById', []);
         $duration = round((microtime(true) - $startTime) * 1000);
-        $this->assertTrue(abs($duration - $vk->getQueryDuration()) < 5, 'Остальные запросы должны придерживаться определенной задержки');
+        $this->assertTrue(
+            abs($duration - $vk->getQueryDuration()) < 5,
+            'Остальные запросы 
+            должны придерживаться определенной задержки'
+        );
 
 
         $startTime = microtime(true);
         $vk->callMethod('market.getById', []);
         $duration = round((microtime(true) - $startTime) * 1000);
-        $this->assertTrue(abs($duration - $vk->getQueryDuration()) < 5, 'Остальные запросы должны придерживаться определенной задержки');
+        $this->assertTrue(
+            abs($duration - $vk->getQueryDuration()) < 5,
+            'Остальные запросы 
+            должны придерживаться определенной задержки'
+        );
 
         usleep(160 * 1000);
 
         $startTime = microtime(true);
         $vk->callMethod('market.getById', []);
         $duration = round((microtime(true) - $startTime) * 1000);
-        $this->assertEquals($duration, $queryEngine->wait, 'Этот запрос должен выполниться без задержки, т.к. выше создана искуственная задержка превышающая интервал');
-
-
+        $this->assertEquals(
+            $duration,
+            $queryEngine->wait,
+            'Этот запрос должен выполниться без задержки, т.к. 
+            выше создана искуственная задержка превышающая интервал'
+        );
     }
-
 }

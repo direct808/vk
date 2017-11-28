@@ -9,4 +9,3 @@ class UnknownMethodVkException extends VkException
         parent::__construct($message, $code, $previous);
     }
 }
-

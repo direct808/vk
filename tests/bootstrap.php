@@ -9,4 +9,3 @@ $dotEnv->load();
 if (empty(getenv('ACCESS_TOKEN')) && empty(getenv('GROUP_ID'))) {
     throw new \Exception('ACCESS_TOKEN && GROUP_ID env values not set');
 }
-

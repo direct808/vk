@@ -1,6 +1,6 @@
 <?php
-namespace Direct808\Vk;
 
+namespace Direct808\Vk;
 
 interface QueryEngine
 {

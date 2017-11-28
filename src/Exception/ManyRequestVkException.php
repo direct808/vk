@@ -9,4 +9,3 @@ class ManyRequestVkException extends VkException
         parent::__construct($message, $code, $previous);
     }
 }
-

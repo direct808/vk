@@ -16,12 +16,13 @@ class Vk
     private $queryService;
 
     private $lastQueryTimestamp = 0;
-    private $queryDuration = 100;  //ms
+    private $queryDuration = 334;  //ms
 
     public function __construct($options = [], $queryEngine = null)
     {
-        if (!$queryEngine)
+        if (!$queryEngine) {
             $queryEngine = new CurlQueryEngine();
+        }
         $this->queryService = $queryEngine;
     }
 
@@ -54,8 +55,9 @@ class Vk
 
     private function processWait()
     {
-        if ($this->lastQueryTimestamp == 0)
+        if ($this->lastQueryTimestamp == 0) {
             return;
+        }
 
         $curTime = microtime(true);
         $lastQueryDuration = ($curTime - $this->lastQueryTimestamp);
@@ -75,7 +77,7 @@ class Vk
 
     private function query($url, array $parameters = [])
     {
-        $result = $this->queryService->query($url, $parameters);;
+        $result = $this->queryService->query($url, $parameters);
         $result = json_decode($result, true);
 
         if (isset($result['error'])) {
@@ -84,9 +86,9 @@ class Vk
         return $result;
     }
 
-     private function queryAsync(array $data)
+    private function queryAsync(array $data)
     {
-        $result = $this->queryService->queryAsync($data);;
+        $result = $this->queryService->queryAsync($data);
 //        $result = json_decode($result, true);
 //
 //        if (isset($result['error'])) {
@@ -98,8 +100,9 @@ class Vk
 
     private function handleError($error)
     {
-        if (is_string($error))
+        if (is_string($error)) {
             throw new Exception\VkException($error);
+        }
 
         $message = isset($error['error_msg']) ? $error['error_msg'] : 'Unknown Vk error';
         $code = isset($error['error_code']) ? $error['error_code'] : 0;
@@ -123,7 +126,6 @@ class Vk
                 throw new Exception\ParametersMissingVkException($message);
             case 1403:
                 throw new Exception\ItemNotFoundException($message);
-
         }
         throw new Exception\VkException($message, $code);
     }
@@ -170,5 +172,4 @@ class Vk
         $this->queryDuration = $ms;
         return $this;
     }
-
 }

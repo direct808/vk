@@ -2,9 +2,17 @@
 
 namespace Direct808\Vk;
 
-
 class CurlQueryEngine implements QueryEngine
 {
+    private $sslVerifyPeer = true;
+
+    public function __construct($options = [])
+    {
+        if (isset($options['ssl_verify_peer'])) {
+            $this->sslVerifyPeer = (bool)$options['ssl_verify_peer'];
+        }
+    }
+
     public function query($url, array $parameters = [])
     {
         $ch = curl_init();
@@ -12,7 +20,7 @@ class CurlQueryEngine implements QueryEngine
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $parameters);
-//        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->sslVerifyPeer);
 
         $result = curl_exec($ch);
 
@@ -40,6 +48,5 @@ class CurlQueryEngine implements QueryEngine
         do {
             $mrc = curl_multi_exec($mh, $active);
         } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-
     }
 }
