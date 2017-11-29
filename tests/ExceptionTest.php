@@ -104,7 +104,6 @@ class ExceptionTest extends VkTestCase
                 ]);
             }
         } finally {
-            echo 'sleep';
             sleep(2); // спим чтоб следующие тесты не отвалились
         }
         $this->assertTrue(
