@@ -16,7 +16,9 @@ class VkTestCase extends TestCase
 
     public static function setUpBeforeClass()
     {
-        self::$vk = new Vk();
+        if (!self::$vk) {
+            self::$vk = new Vk();
+        }
         self::$image = __DIR__ . '/../400.gif';
         self::$accessToken = getenv('ACCESS_TOKEN');
     }

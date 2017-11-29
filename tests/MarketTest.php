@@ -150,4 +150,38 @@ class MarketTest extends VkTestCase
         $result = self::$vk->marketDelete(-getenv('GROUP_ID'), $itemId);
         $this->assertTrue($result);
     }
+
+
+    public function testUploadManyAdvertsAndImages()
+    {
+        $images = array_fill(0, 2, self::$image);
+        self::$vk->setQueryDuration(100);
+
+        for ($i = 0; $i < 2; $i++) {
+            $photos = self::$vk->marketUploadPhotos($images, getenv('GROUP_ID'), true);
+            $mainPhoto = reset($photos);
+
+            self::$vk->marketAdd([
+                'owner_id' => -getenv('GROUP_ID'),
+                'name' => "Market name $i",
+                'description' => "Market description $i",
+                'category_id' => 500,
+                'price' => 100,
+                'main_photo_id' => $mainPhoto,
+                'photo_ids' => implode(',', $photos),
+            ]);
+        }
+
+        $this->assertTrue(true);
+    }
+
+
+    public function testMarketDeleteAll()
+    {
+        $groupId = getenv('GROUP_ID');
+        self::$vk->marketDeleteAll(-$groupId);
+        $this->assertTrue(true);
+    }
+
+
 }

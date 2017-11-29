@@ -3,6 +3,7 @@
 namespace Test;
 
 use Direct808\Vk\Exception;
+use Direct808\Vk\Exception\ManyRequestVkException;
 use Test\Helpers\VkTestCase;
 
 class ExceptionTest extends VkTestCase
@@ -66,5 +67,49 @@ class ExceptionTest extends VkTestCase
         $this->expectExceptionCode(13);
 
         self::$vk->execute('var a=1/0;');
+    }
+
+    /** @test */
+    public function noManyRequestPerSecondException()
+    {
+        $true = true;
+        try {
+            for ($i = 0; $i < 20; $i++) {
+                self::$vk->marketGetById([
+                    'item_ids' => -getenv('GROUP_ID') . '_34234'
+                ]);
+            }
+        } catch (ManyRequestVkException $e) {
+            $true = false;
+        }
+        $this->assertTrue(
+            $true,
+            "Скрипт не должен был выбросить исключение ManyRequestVkException. 
+            Итерация $i"
+        );
+    }
+
+    /** @test */
+    public function manyRequestPerSecondException()
+    {
+        self::$vk->setQueryDuration(10);
+        $this->expectException(ManyRequestVkException::class);
+        $this->expectExceptionCode(6);
+        $this->expectExceptionMessage('Too many requests per second');
+
+        try {
+            for ($i = 0; $i < 20; $i++) {
+                self::$vk->marketGetById([
+                    'item_ids' => -getenv('GROUP_ID') . '_34234'
+                ]);
+            }
+        } finally {
+            echo 'sleep';
+            sleep(2); // спим чтоб следующие тесты не отвалились
+        }
+        $this->assertTrue(
+            false,
+            'Скрипт должен был выбросить исключение ManyRequestVkException'
+        );
     }
 }
