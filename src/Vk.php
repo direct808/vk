@@ -7,7 +7,8 @@ class Vk
     use
         Features\Market,
         Features\Notes,
-        Features\Photos;
+        Features\Photos,
+        Features\Groups;
 
     private $token;
     private $apiVersion = "5.69";

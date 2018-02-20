@@ -2,6 +2,8 @@
 
 namespace Direct808\Vk\Features;
 
+use Direct808\Vk\Exception\VkException;
+
 trait Market
 {
 
@@ -91,5 +93,20 @@ trait Market
         do {
             $result = $this->execute($code);
         } while ($result == 1);
+    }
+
+    public function marketEnabled($groupId)
+    {
+        $result = $this->groupsGetById([
+            'group_id' => $groupId,
+            'fields' => 'market'
+        ]);
+        if (!is_array($result)) {
+            throw  new VkException('Bad result');
+        }
+        if (!isset($result[0]['market'])) {
+            throw  new VkException('Bad result');
+        }
+        return $result[0]['market']['enabled'] == '1';
     }
 }

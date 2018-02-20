@@ -184,4 +184,9 @@ class MarketTest extends VkTestCase
     }
 
 
+    public function testMarketEnabled()
+    {
+        $groupId = getenv('GROUP_ID');
+        $this->assertTrue(self::$vk->marketEnabled($groupId));
+    }
 }
